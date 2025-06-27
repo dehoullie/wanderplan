@@ -1,0 +1,36 @@
+// src/assets/styles/main.scss
+
+// 1. Load Bootstrap’s core so its variables and maps exist
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/maps";
+
+// 2. Load YOUR variables and overrides
+@import "variables";
+@import "bootstrap-overrides";
+
+
+// Custom button style
+.btn-orange {
+  @extend .btn;
+  background-color: $brand-orange !important;
+  border-color: $brand-orange !important;
+  color: #fff !important;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:hover,
+  &:focus {
+    background-color: $brand-orange !important;
+    opacity: 0.85;
+    color: #fff !important;
+  }
+}
+
+// 3. Finally compile all of Bootstrap (with your overrides baked in)
+@import "bootstrap/scss/bootstrap";
+
+// 4. Your own global CSS
+body {
+  background-color: $brand-gray;
+  color: $brand-heading;
+}

@@ -1,0 +1,9 @@
+// src/assets/styles/_bootstrap-overrides.scss
+
+// Merge in your custom orange
+$theme-colors: map-merge(
+  $theme-colors,
+  (
+    "orange": $brand-orange
+  )
+) !default;

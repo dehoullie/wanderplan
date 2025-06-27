@@ -9,4 +9,12 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+  # config/routes.rb
+  namespace :api do
+    namespace :v1 do
+      get "places", to: "places#index"
+      post "trips/plan", to: "trips#plan"
+    end
+  end
+
 end
