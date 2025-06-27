@@ -14,6 +14,12 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "places", to: "places#index"
       post "trips/plan", to: "trips#plan"
+      get 'itineraries/gallery', to: 'itineraries#gallery'
+      resources :itineraries, only: [:show] do
+        collection do
+          get :find_existing
+        end
+      end
     end
   end
 
