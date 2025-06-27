@@ -2,7 +2,9 @@
   <header class="container-fluid py-3">
     <div class="container d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
-        <img src="@/assets/images/wanderplan-logo.svg" alt="Wanderplan Logo" height="40" class="me-2" />
+          <a href="/">
+            <img src="@/assets/images/wanderplan-logo.svg" alt="Wanderplan Logo" height="40" class="me-2" />
+          </a>
       </div>
       <!-- Hamburger for mobile -->
       <button

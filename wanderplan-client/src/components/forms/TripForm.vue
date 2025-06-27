@@ -136,6 +136,11 @@
       </button>
     </div>
   </form>
+  <div v-if="loading" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background:rgba(255,255,255,0.85);z-index:2000;">
+  <div class="spinner-border text-orange" role="status" style="width:4rem;height:4rem;">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
 </template>
 
 <script setup>
@@ -178,7 +183,7 @@ const form = reactive({
   tripName:        '',
   selectedCities:  [],
   preferences:     [],
-  budget:          'low',
+  budget:          1, // default to "Low Budget"
   dateRange:       null,
   friendEmail:     ''
 })
@@ -244,10 +249,10 @@ const categories = [
   { name: 'Natural points of interest', label: 'Natural points of interest', icon: MountainSnow }
 ]
 const budgetLevels = [
-  { id: 'low', name: 'Low Budget', icon: DollarSign },
-  { id: 'medium', name: 'Medium Budget', icon: CreditCard },
-  { id: 'high', name: 'High Budget', icon: Star },
-  { id: 'ultra', name: 'Ultra-High Budget', icon: Award }
+  { id: 1, name: 'Low Budget', icon: DollarSign },
+  { id: 2, name: 'Medium Budget', icon: CreditCard },
+  { id: 3, name: 'High Budget', icon: Star },
+  { id: 4, name: 'Ultra-High Budget', icon: Award }
 ]
 function toggleCategory(cat) {
   const idx = form.preferences.indexOf(cat)
@@ -265,42 +270,87 @@ function extractJsonString(gptResponse) {
 
   return cleaned.trim();
 }
-
-// Submit handler
-async function onSubmit() {
-  // You can add loading state here if you want
+// CHeck if there is any same Itinerary
+async function findExistingItinerary(city, preferences, budget, maxDays) {
   try {
-    const response = await axios.post('/api/v1/trips/plan', {
-      trip_name:       form.tripName,
-      cities:          form.selectedCities,    // or whatever key you want to send
-      preferences:     form.preferences,
-      budget:          form.budget,
-      start_date:      form.dateRange ? form.dateRange[0] : null,
-      end_date:        form.dateRange ? form.dateRange[1] : null,
-      friend_email:    form.friendEmail
+    const response = await axios.get('/api/v1/itineraries/find_existing', {
+      params: {
+        city,
+        preferences: preferences.join(','),
+        budget,
+        max_days: maxDays
+      }
     });
-    console.log('[TripForm] API response:', response.data);
-    // Handle response here (show result, go to next page, etc)
-
-    const raw = response.data.gpt_response;
-    const jsonStr = extractJsonString(raw);
-    let itinerary = null;
-    try {
-      itinerary = JSON.parse(jsonStr);
-      console.log("Parsed itinerary:", itinerary);
-    } catch (e) {
-      console.error("Failed to parse GPT response:", jsonStr, e);
+    if (response.data && response.data.id) {
+      return response.data.id;
     }
-
-    // console.log(itinerary.days[0].morning[0].name); // Example access
-
-
-
+    return null;
   } catch (error) {
-    console.error('[TripForm] API error:', error);
-    // Show error to user if needed
+    // Ignore error, just return null
+    return null;
   }
 }
+
+// Submit handler
+import { useRouter } from 'vue-router'
+const router = useRouter();
+
+  async function onSubmit() {
+    loading.value = true;
+
+    // Compute all needed params
+    const city = form.selectedCities[0]?.city || '';
+    const preferences = form.preferences;
+    const budget = form.budget;
+    const start = form.dateRange ? form.dateRange[0] : null;
+    const end = form.dateRange ? form.dateRange[1] : null;
+
+    // Calculate max_days
+    let maxDays = 1;
+    if (start && end) {
+      const d1 = new Date(start);
+      const d2 = new Date(end);
+      maxDays = Math.max(1, Math.round((d2 - d1) / (1000*60*60*24)) + 1);
+    }
+
+    // 1. Check for existing itinerary
+    const existingId = await findExistingItinerary(city, preferences, budget, maxDays);
+    if (existingId) {
+      loading.value = false;
+      router.push(`/itinerary/${existingId}`);
+      return;
+    }
+
+    // 2. Otherwise, proceed to POST/plan and go to itinerary/:id
+    try {
+      const response = await axios.post('/api/v1/trips/plan', {
+        trip_name: form.tripName,
+        cities: form.selectedCities,
+        preferences: preferences,
+        budget: budget,
+        start_date: start,
+        end_date: end,
+        friend_email: form.friendEmail
+      });
+
+      // Optionally, parse/save itinerary response as before...
+
+      // Get id from save_result (check your backend structure!)
+      const newId = response.data.save_result?.itinerary_id;
+      loading.value = false;
+
+      if (newId) {
+        router.push(`/itinerary/${newId}`);
+      } else {
+        // Handle missing id error
+        alert("Itinerary was created, but ID is missing!");
+      }
+    } catch (error) {
+      loading.value = false;
+      alert("An error occurred. Please try again!");
+    }
+  }
+const loading = ref(false)
 </script>
 
 <style scoped>

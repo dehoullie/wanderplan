@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_25_090843) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_25_090738) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -100,18 +100,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_25_090843) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  create_table "users_preferences", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "preference_id", null: false
-    t.string "title"
-    t.date "start_date"
-    t.date "end_date"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["preference_id"], name: "index_users_preferences_on_preference_id"
-    t.index ["user_id"], name: "index_users_preferences_on_user_id"
-  end
-
   add_foreign_key "activities", "categories"
   add_foreign_key "activities", "cities"
   add_foreign_key "activities", "itineraries"
@@ -121,6 +109,4 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_25_090843) do
   add_foreign_key "itineraries", "preferences"
   add_foreign_key "preferences", "budgets"
   add_foreign_key "preferences", "cities"
-  add_foreign_key "users_preferences", "preferences"
-  add_foreign_key "users_preferences", "users"
 end
