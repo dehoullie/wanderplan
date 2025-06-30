@@ -6,13 +6,14 @@
       <b>Discover Popular Itineraries</b><br>
       Browse our most popular travel plans chosen by fellow travelers...
     </p>
-    <div class="gallery-cards">
+    <div class="row">
       <div
         v-for="itinerary in itineraries"
         :key="itinerary.id"
-        class="gallery-card"
+        class="col-lg-3 col-sm-6 py-2"
         @click="goToItinerary(itinerary.id)"
       >
+      <div class="gallery-card">
         <img
             :src="`/${itinerary.image_url || 'city_images/placeholder.jpg'}`"
             alt="city image"
@@ -28,6 +29,7 @@
         </div>
         <div class="gallery-pref p-2">
           {{ Array.isArray(itinerary.preferences) ? itinerary.preferences.join(', ') : itinerary.preferences }}
+        </div>
         </div>
       </div>
     </div>
@@ -63,21 +65,20 @@ function goToItinerary(id) {
 .gallery-cards {
   display: flex;
   flex-wrap: wrap;
-  gap: 32px;
 }
 .gallery-card {
   background: #fff;
   border-radius: 4px;
   box-shadow: 0 2px 12px #0001;
-  width: 360px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.12s;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .gallery-card:hover {
-  transform: translateY(-5px) scale(1.02);
+  transform: translateY(-5px) scale(1.01);
 }
 .gallery-image {
   width: 100%;
