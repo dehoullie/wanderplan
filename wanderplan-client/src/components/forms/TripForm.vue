@@ -99,7 +99,7 @@
         <label class="form-label">Select Range</label>
         <Datepicker
           v-model="form.dateRange"
-          :range="{ maxRange: 7 }"
+          :range="{ maxRange: 4 }"
           :enable-time-picker="false"
           format="dd/MM/yyyy"
           placeholder="Select up to 7 days"

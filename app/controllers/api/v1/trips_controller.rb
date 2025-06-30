@@ -38,49 +38,40 @@ class Api::V1::TripsController < ApplicationController
     cities_str = cities.map { |c| "#{c['city']}, #{c['country']}" }.join("; ")
 
     # Compose prompt for ChatGPT
-    # Compose prompt for ChatGPT
     prompt = <<~PROMPT
-      Generate a detailed travel itinerary for the following trip:
-      Destinations: #{cities_str}
-      Number of days: #{num_days}
-      Budget: #{budget.name}
-      Preferences: #{preferences&.join(", ")}
+              Generate a detailed travel itinerary for the following trip:
+              Destinations: #{cities_str}
+              Number of days: #{num_days}
 
-      Each day is divided into Morning, Afternoon, and Evening.
-      For each period, suggest exactly 3 different activities or places to visit.
-      **Only suggest activities and places that match these preferences: #{preferences&.join(", ")}. Do NOT include any activities from other categories.**
-      For each activity, include:
-      - name (the place or activity)
-      - category (MUST be one of: #{preferences&.join(", ")})
-      - address
-      - description (a short, one-sentence summary of the activity)
+              ***IMPORTANT: You MUST generate exactly #{num_days} separate days in the itinerary, no more and no less.***
 
-      Respond ONLY in this JSON format:
-      {
-        "days": [
-          {
-            "day": 1,
-            "morning": [
-              { "name": "...", "category": "...", "address": "...", "description": "..." },
-              { "name": "...", "category": "...", "address": "...", "description": "..." },
-              { "name": "...", "category": "...", "address": "...", "description": "..." }
-            ],
-            "afternoon": [
-              { "name": "...", "category": "...", "address": "...", "description": "..." },
-              { "name": "...", "category": "...", "address": "...", "description": "..." },
-              { "name": "...", "category": "...", "address": "...", "description": "..." }
-            ],
-            "evening": [
-              { "name": "...", "category": "...", "address": "...", "description": "..." },
-              { "name": "...", "category": "...", "address": "...", "description": "..." },
-              { "name": "...", "category": "...", "address": "...", "description": "..." }
-            ]
-          }
-          // ... repeat for each day
-        ]
-      }
-      Do not add any explanation or extra text, only the JSON.
-    PROMPT
+              Budget: #{budget.name}
+              Preferences: #{preferences&.join(", ")}
+
+              Each day is divided into Morning, Afternoon, and Evening.
+              For each period, suggest exactly 3 different activities or places to visit, strictly matching only the user preferences.
+              **Only suggest activities and places that match these preferences: #{preferences&.join(", ")}. Do NOT include any activities from other categories.**
+
+              For each activity, include:
+              - name (the place or activity)
+              - category (MUST be one of: #{preferences&.join(", ")})
+              - address
+              - description (a short, one-sentence summary of the activity)
+
+              Respond ONLY in this JSON format:
+              {
+                "days": [
+                  {
+                    "day": 1,
+                    "morning": [...],
+                    "afternoon": [...],
+                    "evening": [...]
+                  },
+                  ...repeat for each day up to #{num_days}
+                ]
+              }
+              ***Do not add any explanation or extra text, only the JSON.***
+            PROMPT
 
     # Call ChatGPT API (OpenAI)
     gpt_response = call_chatgpt(prompt)
@@ -232,12 +223,13 @@ class Api::V1::TripsController < ApplicationController
     http.use_ssl = true
 
     body = {
-      model: "gpt-3.5-turbo-0125",
+      model: "gpt-4o",
       messages: [
         {role: "system", content: "You are a travel agent."},
         {role: "user", content: prompt}
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      response_format: { type: "json_object" }
     }
 
     request = Net::HTTP::Post.new(url)
