@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_25_090738) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_04_103119) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -69,12 +69,29 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_25_090738) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "favourites", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "itinerary_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["itinerary_id"], name: "index_favourites_on_itinerary_id"
+    t.index ["user_id"], name: "index_favourites_on_user_id"
+  end
+
   create_table "itineraries", force: :cascade do |t|
     t.bigint "preference_id", null: false
     t.string "title"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["preference_id"], name: "index_itineraries_on_preference_id"
+  end
+
+  create_table "jwt_denylists", force: :cascade do |t|
+    t.string "jti"
+    t.datetime "exp"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["jti"], name: "index_jwt_denylists_on_jti"
   end
 
   create_table "preferences", force: :cascade do |t|
@@ -96,8 +113,21 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_25_090738) do
     t.datetime "remember_created_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "name"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  create_table "users_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "preference_id", null: false
+    t.string "title"
+    t.date "start_date"
+    t.date "end_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["preference_id"], name: "index_users_preferences_on_preference_id"
+    t.index ["user_id"], name: "index_users_preferences_on_user_id"
   end
 
   add_foreign_key "activities", "categories"
@@ -106,7 +136,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_25_090738) do
   add_foreign_key "categories_preferences", "categories"
   add_foreign_key "categories_preferences", "preferences"
   add_foreign_key "cities", "countries"
+  add_foreign_key "favourites", "itineraries"
+  add_foreign_key "favourites", "users"
   add_foreign_key "itineraries", "preferences"
   add_foreign_key "preferences", "budgets"
   add_foreign_key "preferences", "cities"
+  add_foreign_key "users_preferences", "preferences"
+  add_foreign_key "users_preferences", "users"
 end

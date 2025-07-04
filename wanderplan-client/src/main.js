@@ -15,3 +15,5 @@ app.use(VCalendar, {
   componentPrefix: 'vc'  // <vc-date-picker> component
 })
 app.mount('#app')
+
+

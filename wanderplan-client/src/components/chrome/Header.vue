@@ -23,8 +23,8 @@
       <nav class="d-none d-md-flex align-items-center gap-3">
         <a href="#" class="text-dark text-decoration-none">About us</a>
         <a href="#" class="text-dark text-decoration-none">Guides</a>
-        <button class="btn-orange px-3 py-1">Sign In</button>
-      </nav>
+        <button v-if="!isLoggedIn" @click="showLoginDrawer = true" class="btn-orange px-3 py-1">Sign In</button>
+        <button v-else @click="showProfileDrawer = true" class="btn-orange px-3 py-1">Profile</button>      </nav>
     </div>
     <!-- Side drawer for mobile -->
     <transition name="slide">
@@ -37,16 +37,44 @@
           <button class="btn-close mb-4" @click="drawerOpen = false"></button>
           <a href="#" class="d-block mb-3 text-dark text-decoration-none">About us</a>
           <a href="#" class="d-block mb-3 text-dark text-decoration-none">Guides</a>
-          <button class="btn-orange w-100">Sign In</button>
-        </div>
+
+        <button v-if="!isLoggedIn" @click="showLoginDrawer = true" class="btn-orange px-3 py-1">Sign In</button>
+        <button v-else @click="showProfileDrawer = true" class="btn-orange px-3 py-1">Profile</button>        </div>
       </div>
     </transition>
   </header>
+  <LoginRegisterDrawer
+    :show="showLoginDrawer"
+    @close="showLoginDrawer = false"
+    @authenticated="showLoginDrawer = false"
+  />
+  <ProfileDrawer
+    :show="showProfileDrawer"
+    @close="showProfileDrawer = false"
+    @logout="logout"
+  />
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import LoginRegisterDrawer from '@/components/auth/LoginRegisterDrawer.vue'
+import { useAuthState } from '@/composables/useAuthState'
+import ProfileDrawer from '@/components/auth/ProfileDrawer.vue'
+
+const { isLoggedIn, login, logout } = useAuthState()
+
 const drawerOpen = ref(false)
+const showLoginDrawer = ref(false)
+// const userLoggedIn = ref(false)
+const showProfileDrawer = ref(false)
+
+// watch(showLoginDrawer, (val) => {
+//   console.log('showLoginDrawer changed:', val)
+// })
+
+// watch(isLoggedIn, (val) => {
+//   console.log('isLoggedIn changed:', val)
+// })
 </script>
 
 <style scoped>

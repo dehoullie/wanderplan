@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   # config/routes.rb
   namespace :api do
     namespace :v1 do
+      devise_scope :user do
+        get 'me', to: 'sessions#me'
+      end
       get "places", to: "places#index"
       post "trips/plan", to: "trips#plan"
       get 'itineraries/gallery', to: 'itineraries#gallery'
@@ -20,6 +23,20 @@ Rails.application.routes.draw do
           get :find_existing
         end
       end
+
+      devise_for :users,
+      controllers: {
+        registrations: 'api/v1/registrations',
+        sessions: 'api/v1/sessions'
+      },
+      path: '',
+      path_names: {
+        sign_in: 'login',
+        sign_out: 'logout',
+        registration: 'register'
+      }
+      # get :me, to: 'sessions#me'
+
     end
   end
 
