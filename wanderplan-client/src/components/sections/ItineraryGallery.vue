@@ -21,6 +21,7 @@
           />
         <div class="gallery-main p-2">
           <span class="gallery-city">
+            <span class="px-2"><CountryFlagByName :countryName="itinerary.country" /></span>
             <b>{{ itinerary.city }}, {{ itinerary.country }}</b>
           </span>
           <span class="gallery-days">
@@ -40,6 +41,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import CountryFlagByName from '@/components/widgets/CountryFlagByName.vue'
+
 const itineraries = ref([])
 const router = useRouter()
 

@@ -1,37 +1,48 @@
 <template>
   <div class="itinerary-page container">
     <!-- ITINERARY SUMMARY HEADER -->
-    <div class="itinerary-summary">
-      <div class="right-summary">
-        <div class="summary-box">
+    <div class="row">
+      <div class="col-sm-12 col-md-6">
+        <div class="itinerary-image">
           <img
-            v-if="cityImageUrl"
-            :src="`/${cityImageUrl}`"
+            v-if="cityImageUrl && !imageError"
+            :src="`/${cityImageUrl}?${Date.now()}`"
             alt="City"
             class="summary-image"
+            @load="handleImageLoad"
+            @error="handleImageError"
           />
-          <div class="summary-details" v-if="itineraryData">
-            <div>
-              <strong>{{ cityName }}, {{ countryName }}</strong>
-              <span style="margin-left: 16px;">{{ numDays }} days</span>
-            </div>
-            <div class="summary-tags">
-              <span v-for="cat in summaryCategories" :key="cat" class="badge">{{ cat }}</span>
-            </div>
-            <div>
-              <span>{{ budgetLabel }}</span>
-            </div>
+          <div v-if="imageLoading" class="placeholder-loader">
+            <!-- Put a spinner/placeholder here -->
+            Loading image...
+          </div>
+          <div v-if="imageError" class="placeholder-error">
+            <!-- Put an error/placeholder image here -->
+            Image not available yet. Retrying...
           </div>
         </div>
+          <div class="summary-details py-2" v-if="itineraryData">
+          <div class="d-flex justify-content-between">
+            <strong>{{ cityName }}, {{ countryName }}</strong>
+            <span style="margin-left: 16px;">{{ numDays }} days</span>
+          </div>
+          <div class="summary-tags">
+            <span v-for="cat in summaryCategories" :key="cat" class="badge">{{ cat }}</span>
+          </div>
+          <div>
+            <span><BudgetBadge :budget-level="itineraryData.preference.budget.name" /></span>
+          </div>
+        </div>
+        </div>
+        <div class="col-sm-12 col-md-6 m-auto">
+          <h1>Your Personalized Itinerary is Ready!</h1>
+          <p class="summary-subtitle"><strong>Check out your detailed itinerary</strong><br>
+            Below, you'll find your daily schedule, meticulously tailored based on your preferences and budget.<br>
+            Each day is planned to maximize your experience, including visits to landmarks, recommended restaurants, and special activities.
+          </p>
+        </div>
       </div>
-      <div class="left-summary">
-        <h1>Your Personalized Itinerary is Ready!</h1>
-        <p class="summary-subtitle"><strong>Check out your detailed itinerary</strong><br>
-          Below, you'll find your daily schedule, meticulously tailored based on your preferences and budget.<br>
-          Each day is planned to maximize your experience, including visits to landmarks, recommended restaurants, and special activities.
-        </p>
-      </div>
-    </div>
+<hr>
 
     <!-- DAILY ITINERARY SECTION -->
     <div class="itinerary-schedule" v-if="groupedActivities && groupedActivities.length">
@@ -48,8 +59,8 @@
               >
                 <div class="card-header">
                   <strong>{{ activity.name }}</strong>
-                  <span class="badge d-block mt-1" :class="'cat-' + (activity.category_slug || 'other')">
-                    {{ activity.category_name }}
+                  <span class="badge" :class="'cat-' + (activity.category_slug || 'other')">
+                    <CategoryBadge :categorySlug="activity.category_slug" />
                   </span>
                 </div>
                 <div class="card-description">
@@ -83,6 +94,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import CategoryBadge from '@/components/widgets/CategoryBadge.vue'
+import BudgetBadge from '@/components/widgets/BudgetBadge.vue'
 
 const route = useRoute()
 const itineraryData = ref(null)
@@ -134,6 +147,32 @@ onMounted(async () => {
 const cityImageUrl = computed(() =>
   itineraryData.value?.preference?.city?.image_url || null
 )
+const imageLoading = ref(true)
+const imageError = ref(false)
+
+function handleImageLoad() {
+  imageLoading.value = false
+  imageError.value = false
+}
+function handleImageError() {
+  // If image fails, try again in 2 seconds, up to 5 attempts
+  imageError.value = true
+  imageLoading.value = false
+  retryImage()
+}
+
+let retryCount = 0
+function retryImage() {
+  if (retryCount < 5) {
+    retryCount++
+    imageLoading.value = true
+    setTimeout(() => {
+      // This will cause the <img> tag to reload
+      imageLoading.value = false
+      imageError.value = false
+    }, 1800)
+  }
+}
 </script>
 
 <style scoped>
@@ -148,7 +187,23 @@ const cityImageUrl = computed(() =>
 
 }
 .summary-box { background: #f6f6f6; padding: 1rem; border-radius: 8px; }
-.summary-image { width: 100%; max-width: 300px; border-radius: 8px; margin-bottom: 0.75rem; }
+.itinerary-image {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.summary-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center; /* Center both horizontally and vertically */
+  display: block;
+}
+
 .summary-tags { margin: 0.75rem 0; }
 .badge { background: #e4e4e7; color: #333; border-radius: 8px; padding: 0.2em 0.7em; margin-right: 0.5em; font-size: 0.95em; }
 .day-section { margin-bottom: 2.5rem; }
@@ -220,11 +275,18 @@ const cityImageUrl = computed(() =>
 }
 .card-description { color: #444; margin-bottom: 0.6em; }
 .card-address { color: #666; font-size: 0.92em; }
-.cat-Museum { background: #dbeafe; color: #155e75; }
-.cat-Restaurants { background: #fee2e2; color: #b91c1c; }
-.cat-Historical_Places, .cat-HistoricalPlaces { background: #fef3c7; color: #b45309; }
-.cat-Religious_Site { background: #ede9fe; color: #6d28d9; }
-.cat-Shopping_and_Commercial_Areas { background: #f3f4f6; color: #0d9488; }
-.cat-Natural_points_of_interest { background: #dcfce7; color: #166534; }
-.cat-Theme_Park { background: #fce7f3; color: #a21caf; }
+.cat-museum,
+.category-badge.cat-museum { background: #e0ecff; color: #1769aa; }
+.cat-historical_places,
+.category-badge.cat-historical_places { background: #ffe9d5; color: #ad4d00; }
+.cat-restaurants,
+.category-badge.cat-restaurants { background: #ffe4e1; color: #e63946; }
+.cat-religious_site,
+.category-badge.cat-religious_site { background: #f4e5ff; color: #6b21a8; }
+.cat-theme_park,
+.category-badge.cat-theme_park { background: #fff0fa; color: #a21caf; }
+.cat-shopping_and_commercial_areas,
+.category-badge.cat-shopping_and_commercial_areas { background: #e9f5e1; color: #15803d; }
+.cat-natural_points_of_interest,
+.category-badge.cat-natural_points_of_interest { background: #e1fff5; color: #00796b; }
 </style>

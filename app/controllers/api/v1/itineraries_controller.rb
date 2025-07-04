@@ -95,7 +95,11 @@ class Api::V1::ItinerariesController < ApplicationController
     place = search_json['results'].first
     return nil unless place && place['photos']
 
-    photo_ref = place['photos'].first['photo_reference']
+    # Find the first landscape photo
+    landscape_photo = place['photos'].find { |p| p['width'] > p['height'] }
+    photo = landscape_photo || place['photos'].first
+
+    photo_ref = photo['photo_reference']
     # 2. Download photo
     photo_url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=#{photo_ref}&key=#{api_key}"
     IO.copy_stream(URI.open(photo_url), file_path)
@@ -107,7 +111,7 @@ class Api::V1::ItinerariesController < ApplicationController
   itineraries = Itinerary
     .includes(preference: [:budget, { city: :country }], activities: [:category])
     .order(created_at: :desc)
-    .limit(6)
+    .limit(8)
 
   render json: itineraries.map { |itinerary|
     activities = itinerary.activities.order(:day, :part_of_day, :id).map do |a|

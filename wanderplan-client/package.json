@@ -12,9 +12,12 @@
     "@popperjs/core": "^2.11.8",
     "@vuepic/vue-datepicker": "^11.0.2",
     "bootstrap": "^5.3.7",
+    "country-list": "^2.3.0",
     "lucide-vue-next": "^0.523.0",
     "v-calendar": "^3.1.2",
     "vue": "^3.5.17",
+    "vue-country-flag-next": "^2.3.2",
+    "vue-flag-icon": "^2.1.0",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
